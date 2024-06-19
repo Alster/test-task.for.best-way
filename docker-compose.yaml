@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  redis-message-bus:
+    image: "redis:5.0-alpine"
+    ports:
+      - "6379:6379"
+
+  mongodb-single-replica:
+    image: mongo:5.0.4
+    container_name: mongodb_local_single_replica
+    ports:
+      - "27037:27037"
+    restart: always
+    environment:
+      - MONGODB_DATABASE="best-way"
+    volumes:
+      - ./docker/volume/mongodb_local:/data/db
+    entrypoint: [ "/usr/bin/mongod", "--port", "27037", "--bind_ip_all", "--replSet", "rs0" ]
+
+  test-task-app:
+    image: test-task-app
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file:
+      - .env.prod
+    ports:
+      - "3000:3000"
+    command: "pnpm run start:prod"
+    depends_on:
+      - redis-message-bus
+      - mongodb-single-replica
