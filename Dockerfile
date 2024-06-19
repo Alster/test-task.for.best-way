@@ -1,14 +1,14 @@
 # Base node image:
-FROM node:20-alpine AS base
-RUN yarn set version berry
-RUN yarn config set enableGlobalCache true
-RUN yarn config set globalFolder /usr/local/share/.cache/yarn2
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 # Installing dev dependencies:
 FROM base AS install-dev-dependencies
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,sharing=locked,target=/usr/local/share/.cache/yarn2,rw yarn
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY prisma tsconfig.json tsconfig.build.json nest-cli.json ./
 RUN npx prisma generate
 
@@ -17,7 +17,7 @@ FROM base AS install-prod-dependencies
 ENV NODE_ENV production
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,sharing=locked,target=/usr/local/share/.cache/yarn2,rw yarn workspaces focus --all --production
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 COPY prisma tsconfig.json tsconfig.build.json nest-cli.json ./
 RUN npx prisma generate
 
@@ -27,7 +27,7 @@ ENV NODE_ENV production
 WORKDIR /app
 COPY . .
 COPY --from=install-dev-dependencies /app ./
-RUN yarn run build
+RUN pnpm run build
 USER node
 
 # Running the application:
