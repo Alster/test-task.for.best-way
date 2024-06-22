@@ -19,7 +19,7 @@ async function bootstrap() {
         prefix: '/assets/',
     });
 
-    await app.listen(3000);
+    await app.listen(3000, '0.0.0.0');
     logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 
