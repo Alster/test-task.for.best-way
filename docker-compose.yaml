@@ -3,6 +3,7 @@ version: "3.7"
 services:
   # region Public services
   test-task-app:
+    container_name: test_task_best_way_app
     image: test-task-app
     build:
       context: ./
@@ -19,12 +20,14 @@ services:
 
   # region Private services
   redis-message-bus:
+    container_name: test_task_best_way_redis
     image: "redis:5.0-alpine"
     ports:
       - "6379:6379"
 
   mongodb-single-replica:
     image: mongo:5.0.4
+    container_name: test_task_best_way_mongodb
     ports:
       - "27037:27037"
     restart: always
