@@ -1,5 +1,5 @@
 import { Body, Controller, Patch, Res } from '@nestjs/common';
-import UserService from '../../services/user.service';
+import UserService from './user.service';
 import { renderNotification } from '../../utils/templates/render-notification';
 import { FastifyReply } from 'fastify';
 import { setUserIdCookie } from '../../utils/set-user-id-cookie';

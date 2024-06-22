@@ -1,6 +1,6 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import { TemplatesEnum } from '../modules/hbsTemplate/templates.enum';
-import UserService from '../services/user.service';
+import UserService from '../modules/user/user.service';
 import { TUserId, USER_ID_COOKIE_NAME } from '../constants/cookie.constants';
 import { Cookies } from '../decorators/cookies.decorator';
 import HbsTemplatesService from '../modules/hbsTemplate/hbs.templates.service';
