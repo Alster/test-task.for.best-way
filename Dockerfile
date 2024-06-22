@@ -3,23 +3,22 @@ FROM node:20-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
+RUN apt-get update && apt-get install -y openssl
 
 # Installing dev dependencies:
 FROM base AS install-dev-dependencies
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY prisma tsconfig.json tsconfig.build.json nest-cli.json ./
-RUN npx prisma generate
+RUN --mount=type=cache,sharing=locked,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Installing prod dependencies:
 FROM base AS install-prod-dependencies
 ENV NODE_ENV production
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 COPY prisma tsconfig.json tsconfig.build.json nest-cli.json ./
-RUN npx prisma generate
+RUN --mount=type=cache,sharing=locked,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
 # Creating a build:
 FROM base AS create-build
