@@ -13,8 +13,8 @@
         {{#each rooms}}
             <div class="room pure-g">
                 <a class="pure-u-1-2 room-name" href="/room/{{this.id}}">{{this.name}}</a>
-                <span class="pure-u-1-8">{{this.playersCount}} players</span>
-                <div class="pure-u-3-8">
+                <span class="pure-u-1-4">{{this.playersCount}} players</span>
+                <div class="pure-u-1-4">
                     {{> room_membership_controller room=this}}
                 </div>
             </div>
