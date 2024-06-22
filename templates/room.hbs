@@ -1,0 +1,21 @@
+{{#if room}}
+    <h1>Room <span class="room-name">{{room.name}}</span></h1>
+
+    <div>{{room.playersCount}} of 10 players here</div>
+    <br>
+
+    <table class="pure-table pure-table-horizontal">
+        <tbody>
+        {{#each room.players}}
+            <tr>
+                <td><span style="color: gray">#</span>{{increment @index}}</td>
+                <td><span class="room-name">{{this}}</span></td>
+            </tr>
+        {{/each}}
+        </tbody>
+    </table>
+    <br>
+    <br>
+
+    {{> room_membership_controller room=room}}
+{{/if}}

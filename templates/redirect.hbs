@@ -1,0 +1,11 @@
+<script>
+    const href = "{{href}}";
+    console.log('href', href);
+    console.log('window.location.pathname', window.location.pathname);
+    if (window.location.pathname !== href) {
+        console.log('redirect');
+        window.location.href = href;
+    } else {
+        console.log('no redirect');
+    }
+</script>

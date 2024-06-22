@@ -1,26 +1,25 @@
+/* eslint-disable unicorn/prefer-module */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-// eslint-disable-next-line unicorn/import-style
-import * as path from 'node:path';
+import { fastifyCookie } from '@fastify/cookie';
 import { Logger } from '@nestjs/common';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { buildPathFromRoot } from './utils/build-path-from-root';
 
 const logger = new Logger('Main');
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
-    app.setViewEngine({
-        engine: {
-            // eslint-disable-next-line unicorn/prefer-module
-            handlebars: require('handlebars'),
-        },
-        // eslint-disable-next-line unicorn/prefer-module
-        templates: path.join(__dirname, '..', 'views'),
+    // @ts-expect-error Maybe some mistypings in the fastify-cookie typings
+    await app.register(fastifyCookie);
+
+    app.useStaticAssets({
+        root: buildPathFromRoot('assets'),
+        prefix: '/assets/',
     });
 
     await app.listen(3000);
-
     logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 

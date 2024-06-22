@@ -1,0 +1,23 @@
+<div class="container">
+    <h1>Rooms</h1>
+    <div class="rooms-list">
+        <button
+            class="pure-button button-success pure-u-1"
+            hx-post="/room" hx-trigger="click" hx-swap="message" hx-target="#response-container">
+            Create new room
+        </button>
+
+        <br>
+        <br>
+
+        {{#each rooms}}
+            <div class="room pure-g">
+                <a class="pure-u-1-2 room-name" href="/room/{{this.id}}">{{this.name}}</a>
+                <span class="pure-u-1-8">{{this.playersCount}} players</span>
+                <div class="pure-u-3-8">
+                    {{> room_membership_controller room=this}}
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>

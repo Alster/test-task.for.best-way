@@ -8,11 +8,8 @@ datasource db {
 }
 
 model Room {
-  id      String   @id @default(auto()) @map("_id") @db.ObjectId
-  name    String
-  members String[]
-
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  players   String[]
   createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

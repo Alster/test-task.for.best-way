@@ -1,0 +1,41 @@
+{{#> base_layout}}
+    <style>
+        input.room-name {
+            vertical-align: baseline;
+            padding: 0;
+        }
+
+        .admin-panel {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(223, 117, 20, 0.25);
+        }
+    </style>
+    <a class="pure-button pure-u-1" href="/">Back to rooms list</a>
+
+    {{#if room}}
+        {{#if room.isCreatedByMe}}
+            <form class="pure-form pure-form-aligned admin-panel">
+                <h2>Admin panel</h2>
+                <fieldset>
+                    <div class="pure-control-group">
+                        <label for="room-name">Room name</label>
+                        <input
+                            id="room-name" name="value" type="text"
+                            value="{{room.name}}"
+                            hx-patch="/room/{{room.id}}/rename"
+                            hx-trigger="keyup changed delay:500ms"
+                            hx-target="#response-container"
+                            class="room-name"
+                        />
+                    </div>
+                </fieldset>
+            </form>
+        {{/if}}
+        <br /> <br />
+
+        <div hx-ext="sse" sse-connect="/room/sse/{{room.id}}" sse-swap="message">Connecting...</div>
+    {{else}}
+        <div>{{error}}</div>
+    {{/if}}
+{{/base_layout}}

@@ -1,9 +1,30 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { AppController } from './controllers/app.controller';
+import { RoomModule } from './modules/room/room.module';
+import { UserModule } from './modules/user/user.module';
+import { ClsModule } from 'nestjs-cls';
+import { USER_ID_COOKIE_NAME } from './constants/cookie.constants';
+import { HbsTemplatesModule } from './modules/hbsTemplate/hbs.templates.module';
+import { parseCookieString } from './utils/parse-cookie-string';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [],
+    imports: [
+        HbsTemplatesModule,
+        RoomModule,
+        UserModule,
+        ClsModule.forRoot({
+            middleware: {
+                mount: true,
+                generateId: true,
+                setup: (cls, request) => {
+                    const cookies = parseCookieString(request.headers.cookie);
+                    const userId = cookies[USER_ID_COOKIE_NAME];
+                    cls.set(USER_ID_COOKIE_NAME, userId);
+                },
+            },
+        }),
+    ],
+    controllers: [AppController],
+    providers: [],
 })
 export class AppModule {}

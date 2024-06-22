@@ -1,0 +1,86 @@
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: #333333;
+}
+
+.root-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.root-container .outer-block {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 700px;
+}
+
+.root-container .inner-block {
+    background-color: white;
+    box-shadow: 0 0 1000px white;
+    padding: 50px;
+}
+
+/* Room */
+
+.room {
+    border-bottom: 1px solid #ccc;
+    align-items: center;
+    padding-left: 20px;
+}
+
+.room-name {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+a.room-name:hover {
+    text-decoration: underline black;
+    cursor: pointer;
+}
+
+/* Notifications */
+
+#response-container {
+    padding-top: 50px;
+}
+
+.notification {
+    border-bottom: 5px solid black;
+    padding: 5px;
+}
+
+.notification.ok {
+    border-color: green;
+}
+
+.notification.error {
+    border-color: red;
+}
+
+/* Buttons */
+
+.button-success,
+.button-error,
+.button-warning,
+.button-secondary {
+    color: white;
+}
+
+.button-success {
+    background: #1cb841;
+}
+
+.button-error {
+    background: #ca3c3c;
+}
+
+.button-warning {
+    background: #df7514;
+}
+
+.button-secondary {
+    background: #42b8dd;
+}

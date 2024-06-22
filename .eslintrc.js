@@ -28,5 +28,18 @@ module.exports = {
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
+        'unicorn/no-null': 'off',
+        'unicorn/no-array-reduce': 'off',
+        'unicorn/import-style': [
+            'error',
+            {
+                styles: {
+                    'node:path': {
+                        namespace: true, // Use namespace import for path module
+                        default: false,
+                    },
+                },
+            },
+        ],
     },
 };

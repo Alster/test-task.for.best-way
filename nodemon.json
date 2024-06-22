@@ -1,0 +1,10 @@
+{
+  "restartable": "rs",
+  "verbose": false,
+  "watch": [
+    "./assets/*",
+    "./src/*",
+    "./templates/*"
+  ],
+  "ext": "js,json,ts,css,hbs"
+}

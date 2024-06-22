@@ -1,0 +1,22 @@
+{{#if room.isMeJoined}}
+    <button
+        class="pure-button pure-u-1 button-warning"
+        hx-put="/room/{{room.id}}/leave" hx-trigger="click" hx-swap="message" hx-target="#response-container"
+        hx-confirm="Are you sure you wish to leave this room?"
+    >Leave
+    </button>
+{{else}}
+    {{#if room.isAvailableForJoin}}
+        <button
+            class="pure-button pure-u-1 pure-button-primary"
+            hx-put="/room/{{room.id}}/join" hx-trigger="click" hx-swap="message" hx-target="#response-container"
+        >Join
+        </button>
+    {{else}}
+        <button
+            class="pure-button pure-u-1 button-primary"
+            disabled
+        >Busy
+        </button>
+    {{/if}}
+{{/if}}

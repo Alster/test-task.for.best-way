@@ -1,0 +1,23 @@
+{{#> base_layout}}
+    <form class="pure-form pure-form-aligned">
+        <fieldset>
+            <div class="pure-control-group">
+                <label for="user-id">Your User ID</label>
+                <input
+                    id="user-id" name="value" type="text"
+                    value="{{userId}}"
+                    hx-patch="/user/rename"
+                    hx-trigger="keyup changed delay:500ms"
+                    hx-target="#response-container"
+                    class="room-name"
+                />
+                <button
+                    class="pure-button"
+                    hx-patch="/user/random" hx-trigger="click">
+                    Generate random
+                </button>
+            </div>
+        </fieldset>
+    </form>
+    <div hx-ext="sse" sse-connect="/room/sse/list" sse-swap="message">Connecting...</div>
+{{/base_layout}}
