@@ -12,6 +12,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import RedisService from '../../services/redis.service';
 import { ClsServiceManager } from 'nestjs-cls';
 import { USER_ID_COOKIE_NAME } from '../../constants/cookie.constants';
+import PrismaService from '../../services/prisma.service';
 
 @Controller('room')
 export default class RoomController {
@@ -19,6 +20,7 @@ export default class RoomController {
         private readonly roomService: RoomService,
         private readonly hbsTemplatesService: HbsTemplatesService,
         private readonly redisService: RedisService,
+        private readonly prisma: PrismaService,
     ) {}
 
     @Sse('sse/list')
@@ -49,7 +51,6 @@ export default class RoomController {
     @Sse('sse/:roomId')
     async getSseRoom(
         @Param('roomId') roomId: string,
-        @Res({ passthrough: true }) response: FastifyReply,
         @Req() request: FastifyRequest,
     ): Promise<Observable<string>> {
         const stream$ = new Subject<string>();
@@ -84,43 +85,45 @@ export default class RoomController {
     @Post()
     async create() {
         const userId = getClsUserId();
-        const activeRoom = await this.roomService.getRoomForUser(userId);
 
-        if (activeRoom) {
-            return renderAlreadyJoined(activeRoom);
-        }
+        return this.prisma.$transaction(async (tx) => {
+            const activeRoom = await this.roomService.getRoomForUser(userId, tx);
 
-        const createdRoom = await this.roomService.createRoom({
-            players: [userId],
-            createdBy: userId,
+            if (activeRoom) {
+                return renderAlreadyJoined(activeRoom);
+            }
+
+            const createdRoom = await this.roomService.createRoom(
+                { players: [userId], createdBy: userId },
+                tx,
+            );
+
+            return renderRedirect(`/room/${createdRoom.id}`);
         });
-
-        return renderRedirect(`/room/${createdRoom.id}`);
     }
 
     @Put(':roomId/join')
     async join(@Param('roomId') roomId: string) {
         const userId = getClsUserId();
-        const activeRoom = await this.roomService.getRoomForUser(userId);
 
-        if (activeRoom) {
-            return renderAlreadyJoined(activeRoom);
-        }
+        await this.prisma.$transaction(async (tx) => {
+            const activeRoom = await this.roomService.getRoomForUser(userId, tx);
 
-        const room = await this.roomService.getRoomById(roomId);
-        if (!room) {
-            return renderNotification('error', 'Room is not found');
-        }
+            if (activeRoom) {
+                return renderAlreadyJoined(activeRoom);
+            }
 
-        if (!room.isAvailableForJoin) {
-            return renderNotification('error', 'Reached maximum members limit');
-        }
+            const room = await this.roomService.getRoomById(roomId, tx);
+            if (!room) {
+                return renderNotification('error', 'Room is not found');
+            }
 
-        await this.roomService.updateRoom(roomId, {
-            players: [...room.players, userId],
+            if (!room.isAvailableForJoin) {
+                return renderNotification('error', 'Reached maximum members limit');
+            }
+
+            await this.roomService.updateRoom(roomId, { players: [...room.players, userId] }, tx);
         });
-
-        setTimeout(() => this.redisService.publish(roomId, 'update'));
 
         return renderRedirect(`/room/${roomId}`);
     }
@@ -128,25 +131,24 @@ export default class RoomController {
     @Put(':roomId/leave')
     async leave(@Param('roomId') roomId: string) {
         const userId = getClsUserId();
-        const activeRoom = await this.roomService.getRoomForUser(userId);
 
-        if ((activeRoom && activeRoom.id !== roomId) || !activeRoom) {
-            return renderNotification('error', 'You is not a member');
-        }
+        return this.prisma.$transaction(async (tx) => {
+            const activeRoom = await this.roomService.getRoomForUser(userId, tx);
 
-        const updatedPlayersList = activeRoom.players.filter((player) => player != userId);
-        const playersListIsEmpty = updatedPlayersList.length === 0;
+            if ((activeRoom && activeRoom.id !== roomId) || !activeRoom) {
+                return renderNotification('error', 'You is not a member');
+            }
 
-        if (playersListIsEmpty) {
-            await this.roomService.deleteRoom(roomId);
-            setTimeout(() => this.redisService.publish(roomId, 'update'));
-            return renderRedirect(`/`);
-        }
+            const updatedPlayersList = activeRoom.players.filter((player) => player != userId);
+            const playersListIsEmpty = updatedPlayersList.length === 0;
 
-        await this.roomService.updateRoom(roomId, {
-            players: { set: updatedPlayersList },
+            if (playersListIsEmpty) {
+                await this.roomService.deleteRoom(roomId, tx);
+                return renderRedirect(`/`);
+            }
+
+            await this.roomService.updateRoom(roomId, { players: { set: updatedPlayersList } }, tx);
         });
-        setTimeout(() => this.redisService.publish(roomId, 'update'));
     }
 
     @Patch(':roomId/rename')
@@ -155,29 +157,29 @@ export default class RoomController {
             return renderNotification('error', 'Value is empty');
         }
 
-        const room = await this.roomService.getRoomById(roomId);
-        if (!room) {
-            return renderNotification('error', 'Room is not found');
-        }
-
-        if (!room.isCreatedByMe) {
-            return renderNotification('error', 'Permission denied');
-        }
-
-        if (value.toLowerCase() === room.name.toLowerCase()) {
-            return;
-        }
-
-        try {
-            await this.roomService.updateRoom(roomId, { name: value.toLowerCase() });
-        } catch (error: unknown) {
-            if (isPrismaError(error, PrismaErrorEnum.P2002)) {
-                return renderNotification('error', 'This name already taken');
+        return this.prisma.$transaction(async (tx) => {
+            const room = await this.roomService.getRoomById(roomId, tx);
+            if (!room) {
+                return renderNotification('error', 'Room is not found');
             }
 
-            throw error;
-        }
+            if (!room.isCreatedByMe) {
+                return renderNotification('error', 'Permission denied');
+            }
 
-        setTimeout(() => this.redisService.publish(roomId, 'update'));
+            if (value.toLowerCase() === room.name.toLowerCase()) {
+                return;
+            }
+
+            try {
+                await this.roomService.updateRoom(roomId, { name: value.toLowerCase() }, tx);
+            } catch (error: unknown) {
+                if (isPrismaError(error, PrismaErrorEnum.P2002)) {
+                    return renderNotification('error', 'This name already taken');
+                }
+
+                throw error;
+            }
+        });
     }
 }
