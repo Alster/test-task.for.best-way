@@ -1,12 +1,13 @@
 import { RoomDto } from './room.dto';
 import { Room } from '@prisma/client';
-import { getClsUserId } from '../../../utils/get-cls.user-id';
+import { getClsUserId } from '../../../../utils/get-cls.user-id';
+import { TRoomId, TRoomName, TUserId } from '../../../../constants/base-types';
 
 export function mapRoomToDto(room: Room): RoomDto {
     return {
-        id: room.id,
-        name: room.name,
-        players: room.players,
+        id: room.id as TRoomId,
+        name: room.name as TRoomName,
+        players: room.players as TUserId[],
 
         playersCount: room.players.length,
         isCreatedByMe: getClsUserId() === room.createdBy,

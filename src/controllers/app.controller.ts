@@ -1,11 +1,13 @@
 import { Controller, Get, Res } from '@nestjs/common';
-import { TemplatesEnum } from '../modules/hbsTemplate/templates.enum';
+import { TemplatesEnum } from '../modules/hbsTemplate/src/templates.enum';
 import UserService from '../modules/user/user.service';
-import { TUserId, USER_ID_COOKIE_NAME } from '../constants/cookie.constants';
+import { USER_ID_COOKIE_NAME } from '../constants/cookie.constants';
 import { Cookies } from '../decorators/cookies.decorator';
 import HbsTemplatesService from '../modules/hbsTemplate/hbs.templates.service';
 import { FastifyReply } from 'fastify';
 import { setUserIdCookie } from '../utils/set-user-id-cookie';
+import { generateUserId } from '../modules/user/src/generate-user.id';
+import { TUserId } from '../constants/base-types';
 
 @Controller()
 export class AppController {
@@ -20,7 +22,7 @@ export class AppController {
         @Res({ passthrough: true }) response: FastifyReply,
     ) {
         if (!userId) {
-            userId = this.userService.generateUserId();
+            userId = generateUserId();
             setUserIdCookie(response, userId);
         }
 

@@ -4,6 +4,7 @@ import { renderError } from '../../utils/templates/render-error';
 import { FastifyReply } from 'fastify';
 import { setUserIdCookie } from '../../utils/set-user-id-cookie';
 import { renderRedirect } from '../../utils/templates/render-redirect';
+import { generateUserId } from './src/generate-user.id';
 
 @Controller('user')
 export default class UserController {
@@ -15,7 +16,7 @@ export default class UserController {
         @Res({ passthrough: true }) response: FastifyReply,
     ) {
         if (!value.trim()) {
-            return renderError('error', 'Value is empty');
+            return renderError(new Error('Value is empty'));
         }
 
         setUserIdCookie(response, value);
@@ -23,7 +24,7 @@ export default class UserController {
 
     @Patch('random')
     async userRandom(@Res({ passthrough: true }) response: FastifyReply) {
-        setUserIdCookie(response, this.userService.generateUserId());
+        setUserIdCookie(response, generateUserId());
 
         return renderRedirect('/', true);
     }

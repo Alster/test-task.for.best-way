@@ -1,5 +1,6 @@
-import { TUserId, USER_ID_COOKIE_NAME } from '../constants/cookie.constants';
+import { USER_ID_COOKIE_NAME } from '../constants/cookie.constants';
 import { ClsServiceManager } from 'nestjs-cls';
+import { TUserId } from '../constants/base-types';
 
 export const getClsUserId = (): TUserId => {
     const cls = ClsServiceManager.getClsService();

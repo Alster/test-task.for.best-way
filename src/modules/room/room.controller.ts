@@ -2,14 +2,15 @@ import { Body, Controller, Get, Param, Patch, Post, Put, Req, Res, Sse } from '@
 import RoomService from './room.service';
 import { concatMap, Observable, Subject, timer } from 'rxjs';
 import HbsTemplatesService from '../hbsTemplate/hbs.templates.service';
-import { TemplatesEnum } from '../hbsTemplate/templates.enum';
+import { TemplatesEnum } from '../hbsTemplate/src/templates.enum';
 import { getClsUserId } from '../../utils/get-cls.user-id';
 import { renderError } from '../../utils/templates/render-error';
 import { renderRedirect } from '../../utils/templates/render-redirect';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import RedisService from '../../services/redis.service';
-import { ClsServiceManager } from 'nestjs-cls';
-import { USER_ID_COOKIE_NAME } from '../../constants/cookie.constants';
+import { actAsClsUser } from '../../utils/act-as-cls-user';
+
+import { TRoomId, TRoomName } from '../../constants/base-types';
 
 @Controller('room')
 export default class RoomController {
@@ -33,7 +34,7 @@ export default class RoomController {
 
     @Get(':roomId')
     async getRoomPage(
-        @Param('roomId') roomId: string,
+        @Param('roomId') roomId: TRoomId,
         @Res({ passthrough: true }) response: FastifyReply,
     ) {
         const maybeRoom = await this.roomService.getById(roomId);
@@ -46,17 +47,14 @@ export default class RoomController {
 
     @Sse('sse/:roomId')
     async getSseRoom(
-        @Param('roomId') roomId: string,
+        @Param('roomId') roomId: TRoomId,
         @Req() request: FastifyRequest,
     ): Promise<Observable<string>> {
         const stream$ = new Subject<string>();
         const userId = getClsUserId();
 
         const pushUpdate = async () => {
-            const cls = ClsServiceManager.getClsService();
-            return cls.run(async () => {
-                cls.set(USER_ID_COOKIE_NAME, userId);
-
+            return actAsClsUser(userId, async () => {
                 const maybeRoom = await this.roomService.getById(roomId);
                 const message = this.hbsTemplatesService.render(
                     TemplatesEnum.room,
@@ -94,7 +92,7 @@ export default class RoomController {
     }
 
     @Put(':roomId/join')
-    async join(@Param('roomId') roomId: string) {
+    async join(@Param('roomId') roomId: TRoomId) {
         const joinResult = await this.roomService.join(roomId);
         if (joinResult instanceof Error) {
             return renderError(joinResult);
@@ -104,24 +102,26 @@ export default class RoomController {
     }
 
     @Put(':roomId/leave')
-    async leave(@Param('roomId') roomId: string) {
+    async leave(@Param('roomId') roomId: TRoomId) {
         const leaveResult = await this.roomService.leave(roomId);
         if (leaveResult instanceof Error) {
             return renderError(leaveResult);
         }
-
         if (leaveResult === null) {
             return renderRedirect(`/`);
         }
     }
 
     @Patch(':roomId/rename')
-    async rename(@Param('roomId') roomId: string, @Body('value') value: string) {
+    async rename(@Param('roomId') roomId: TRoomId, @Body('value') value: string) {
         if (!value.trim()) {
             return renderError(new Error('Value is empty'));
         }
 
-        const renameResult = await this.roomService.rename(roomId, value);
+        const renameResult = await this.roomService.rename(
+            roomId,
+            value.toLowerCase() as TRoomName,
+        );
         if (renameResult instanceof Error) {
             return renderError(renameResult);
         }

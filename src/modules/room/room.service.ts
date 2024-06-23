@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     ConflictException,
     ForbiddenException,
     Injectable,
@@ -7,14 +6,17 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import PrismaService, { PrismaTX } from '../../services/prisma.service';
-import { TUserId } from '../../constants/cookie.constants';
 import { Prisma } from '@prisma/client';
-import { RoomDto } from './dto/room.dto';
-import { mapRoomToDto } from './dto/room.dto-mapper';
+import { RoomDto } from './src/dto/room.dto';
+import { mapRoomToDto } from './src/dto/room.dto-mapper';
 import { isPrismaError, PrismaErrorEnum } from '../../utils/prisma-errors';
 import RedisService from '../../services/redis.service';
-import { AlreadyJoinedError } from './already-joined.error';
+import { AlreadyJoinedError } from './src/already-joined.error';
 import { getClsUserId } from '../../utils/get-cls.user-id';
+import { generateRoomName } from './src/generate-room-name';
+import { TRoomId, TRoomName, TUserId } from '../../constants/base-types';
+import { ROOM_UPDATED } from './src/constants';
+import { isRoomDto } from './src/dto/is-room-dto';
 
 @Injectable()
 export default class RoomService {
@@ -25,18 +27,22 @@ export default class RoomService {
         private readonly redisService: RedisService,
     ) {}
 
-    async getById(id: string, tx: PrismaTX = this.prisma): Promise<RoomDto | Error> {
+    async getById(id: TRoomId, tx: PrismaTX = this.prisma): Promise<RoomDto | Error> {
         try {
             const maybeRoom = await tx.room.findUnique({ where: { id } });
             return maybeRoom ? mapRoomToDto(maybeRoom) : new NotFoundException(`Room not found`);
         } catch (error: unknown) {
             if (isPrismaError(error, PrismaErrorEnum.P2023)) {
-                this.logger.error(error);
-                return new BadRequestException(`Invalid room id`);
+                return new NotFoundException(`Invalid room id`);
             }
 
             throw error;
         }
+    }
+
+    async getByName(name: TRoomName, tx: PrismaTX = this.prisma): Promise<RoomDto | Error> {
+        const maybeRoom = await tx.room.findUnique({ where: { name } });
+        return maybeRoom ? mapRoomToDto(maybeRoom) : new NotFoundException(`Room not found`);
     }
 
     async getList(): Promise<RoomDto[]> {
@@ -56,11 +62,10 @@ export default class RoomService {
         });
     }
 
-    async join(roomId: string): Promise<RoomDto | Error> {
+    async join(roomId: TRoomId): Promise<RoomDto | Error> {
         return this.prisma.$transaction(async (tx) => {
             const userId = getClsUserId();
             const activeRoom = await this.findActive(userId, tx);
-
             if (activeRoom) {
                 return new AlreadyJoinedError(activeRoom);
             }
@@ -69,7 +74,6 @@ export default class RoomService {
             if (maybeRoom instanceof Error) {
                 return maybeRoom;
             }
-
             if (!maybeRoom.isAvailableForJoin) {
                 return new Error('Reached maximum members limit');
             }
@@ -80,7 +84,7 @@ export default class RoomService {
         });
     }
 
-    async leave(roomId: string): Promise<RoomDto | null | Error> {
+    async leave(roomId: TRoomId): Promise<RoomDto | null | Error> {
         return this.prisma.$transaction(async (tx) => {
             const userId = getClsUserId();
             const activeRoom = await this.findActive(userId, tx);
@@ -101,31 +105,27 @@ export default class RoomService {
         });
     }
 
-    async rename(roomId: string, value: string): Promise<RoomDto | Error> {
-        return await this.prisma.$transaction(async (tx) => {
-            const maybeRoom = await this.getById(roomId, tx);
-
-            if (maybeRoom instanceof Error) {
-                return maybeRoom;
+    async rename(roomId: TRoomId, value: TRoomName): Promise<RoomDto | Error> {
+        return this.prisma.$transaction(async (tx) => {
+            const [roomToRename, roomWithSameName] = await Promise.all([
+                this.getById(roomId, tx),
+                this.getByName(value),
+            ]);
+            if (roomToRename instanceof Error) {
+                return roomToRename;
             }
-
-            if (!maybeRoom.isCreatedByMe) {
+            if (isRoomDto(roomWithSameName) && roomWithSameName.id !== roomToRename.id) {
+                return new ConflictException('This name already taken');
+            }
+            if (!roomToRename.isCreatedByMe) {
                 return new ForbiddenException('Permission denied');
             }
 
-            if (value.toLowerCase() === maybeRoom.name.toLowerCase()) {
-                return maybeRoom;
+            if (value === roomToRename.name) {
+                return roomToRename;
             }
 
-            try {
-                return await this.update(roomId, { name: value.toLowerCase() }, tx);
-            } catch (error: unknown) {
-                if (isPrismaError(error, PrismaErrorEnum.P2002)) {
-                    return new ConflictException('This name already taken');
-                }
-
-                throw error;
-            }
+            return await this.update(roomId, { name: value }, tx);
         });
     }
 
@@ -136,25 +136,25 @@ export default class RoomService {
         const room = await tx.room.create({
             data: {
                 ...data,
-                name: data.name || this.generateName(),
+                name: data.name || generateRoomName(),
             },
         });
         return mapRoomToDto(room);
     }
 
     private async update(
-        id: string,
+        id: TRoomId,
         data: Prisma.RoomUpdateInput,
         tx: PrismaTX = this.prisma,
     ): Promise<RoomDto> {
         const room = await tx.room.update({ where: { id }, data });
-        void this.redisService.publish(id, 'update');
+        void this.redisService.publish(id, ROOM_UPDATED);
         return mapRoomToDto(room);
     }
 
-    private async delete(id: string, tx: PrismaTX = this.prisma): Promise<void> {
+    private async delete(id: TRoomId, tx: PrismaTX = this.prisma): Promise<void> {
         await tx.room.delete({ where: { id } });
-        void this.redisService.publish(id, 'update');
+        void this.redisService.publish(id, ROOM_UPDATED);
     }
 
     private async findActive(userId: TUserId, tx: PrismaTX = this.prisma): Promise<RoomDto | null> {
@@ -164,9 +164,5 @@ export default class RoomService {
             },
         });
         return maybeRoom ? mapRoomToDto(maybeRoom) : null;
-    }
-
-    private generateName(): string {
-        return Math.random().toString(36).slice(2);
     }
 }

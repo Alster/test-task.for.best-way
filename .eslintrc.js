@@ -11,6 +11,7 @@ module.exports = {
         'import',
         'unicorn',
         'security',
+        'jest',
     ],
     extends: [
         'eslint:recommended',
@@ -18,10 +19,12 @@ module.exports = {
         'plugin:import/typescript',
         'plugin:unicorn/all',
         'plugin:security/recommended-legacy',
+        'plugin:jest/recommended',
+        'plugin:jest/style',
         'plugin:prettier/recommended',
     ],
     root: true,
-    env: { node: true },
+    env: { node: true, jest: true },
     ignorePatterns: ['.eslintrc.js'],
     rules: {
         '@typescript-eslint/interface-name-prefix': 'off',

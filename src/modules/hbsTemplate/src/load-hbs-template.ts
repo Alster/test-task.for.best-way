@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import Handlebars from 'handlebars';
 
-export function loadHbsTemplate(filePath: string): Handlebars.TemplateDelegate {
+export async function loadHbsTemplate(filePath: string): Promise<Handlebars.TemplateDelegate> {
     if (!fs.existsSync(filePath)) {
         throw new Error(`Cannot load HBS template at "${filePath}"`);
     }
-    return Handlebars.compile(fs.readFileSync(filePath, 'utf8'));
+    return Handlebars.compile(await fs.promises.readFile(filePath, 'utf8'));
 }
