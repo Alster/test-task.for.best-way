@@ -1,6 +1,6 @@
 import { Body, Controller, Patch, Res } from '@nestjs/common';
 import UserService from './user.service';
-import { renderNotification } from '../../utils/templates/render-notification';
+import { renderError } from '../../utils/templates/render-error';
 import { FastifyReply } from 'fastify';
 import { setUserIdCookie } from '../../utils/set-user-id-cookie';
 import { renderRedirect } from '../../utils/templates/render-redirect';
@@ -15,7 +15,7 @@ export default class UserController {
         @Res({ passthrough: true }) response: FastifyReply,
     ) {
         if (!value.trim()) {
-            return renderNotification('error', 'Value is empty');
+            return renderError('error', 'Value is empty');
         }
 
         setUserIdCookie(response, value);

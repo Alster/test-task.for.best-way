@@ -4,15 +4,12 @@ import { concatMap, Observable, Subject, timer } from 'rxjs';
 import HbsTemplatesService from '../hbsTemplate/hbs.templates.service';
 import { TemplatesEnum } from '../hbsTemplate/templates.enum';
 import { getClsUserId } from '../../utils/get-cls.user-id';
-import { isPrismaError, PrismaErrorEnum } from '../../utils/prisma-errors';
-import { renderNotification } from '../../utils/templates/render-notification';
+import { renderError } from '../../utils/templates/render-error';
 import { renderRedirect } from '../../utils/templates/render-redirect';
-import { renderAlreadyJoined } from '../../utils/templates/render-already-joined';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import RedisService from '../../services/redis.service';
 import { ClsServiceManager } from 'nestjs-cls';
 import { USER_ID_COOKIE_NAME } from '../../constants/cookie.constants';
-import PrismaService from '../../services/prisma.service';
 
 @Controller('room')
 export default class RoomController {
@@ -20,14 +17,13 @@ export default class RoomController {
         private readonly roomService: RoomService,
         private readonly hbsTemplatesService: HbsTemplatesService,
         private readonly redisService: RedisService,
-        private readonly prisma: PrismaService,
     ) {}
 
     @Sse('sse/list')
     async getSseList() {
         return timer(0, 2000).pipe(
             concatMap(async () => {
-                const availableRooms = await this.roomService.getRooms();
+                const availableRooms = await this.roomService.getList();
                 return this.hbsTemplatesService.render(TemplatesEnum.rooms_list, {
                     rooms: availableRooms,
                 });
@@ -40,11 +36,11 @@ export default class RoomController {
         @Param('roomId') roomId: string,
         @Res({ passthrough: true }) response: FastifyReply,
     ) {
-        const room = await this.roomService.getRoomById(roomId);
+        const maybeRoom = await this.roomService.getById(roomId);
         response.header('Content-Type', 'text/html');
         return this.hbsTemplatesService.render(
             TemplatesEnum.page_room,
-            room ? { room } : { error: 'Not found' },
+            maybeRoom instanceof Error ? { error: maybeRoom.message } : { room: maybeRoom },
         );
     }
 
@@ -61,11 +57,16 @@ export default class RoomController {
             return cls.run(async () => {
                 cls.set(USER_ID_COOKIE_NAME, userId);
 
-                const room = await this.roomService.getRoomById(roomId);
-                const message = this.hbsTemplatesService.render(TemplatesEnum.room, {
-                    room,
-                    joined: room ? room.players.includes(userId) : false,
-                });
+                const maybeRoom = await this.roomService.getById(roomId);
+                const message = this.hbsTemplatesService.render(
+                    TemplatesEnum.room,
+                    maybeRoom instanceof Error
+                        ? { room: null, joined: false }
+                        : {
+                              room: maybeRoom,
+                              joined: maybeRoom.players.includes(userId),
+                          },
+                );
                 stream$.next(message);
             });
         };
@@ -84,102 +85,45 @@ export default class RoomController {
 
     @Post()
     async create() {
-        const userId = getClsUserId();
+        const createResult = await this.roomService.tryCreate();
+        if (createResult instanceof Error) {
+            return renderError(createResult);
+        }
 
-        return this.prisma.$transaction(async (tx) => {
-            const activeRoom = await this.roomService.getRoomForUser(userId, tx);
-
-            if (activeRoom) {
-                return renderAlreadyJoined(activeRoom);
-            }
-
-            const createdRoom = await this.roomService.createRoom(
-                { players: [userId], createdBy: userId },
-                tx,
-            );
-
-            return renderRedirect(`/room/${createdRoom.id}`);
-        });
+        return renderRedirect(`/room/${createResult.id}`);
     }
 
     @Put(':roomId/join')
     async join(@Param('roomId') roomId: string) {
-        const userId = getClsUserId();
-
-        await this.prisma.$transaction(async (tx) => {
-            const activeRoom = await this.roomService.getRoomForUser(userId, tx);
-
-            if (activeRoom) {
-                return renderAlreadyJoined(activeRoom);
-            }
-
-            const room = await this.roomService.getRoomById(roomId, tx);
-            if (!room) {
-                return renderNotification('error', 'Room is not found');
-            }
-
-            if (!room.isAvailableForJoin) {
-                return renderNotification('error', 'Reached maximum members limit');
-            }
-
-            await this.roomService.updateRoom(roomId, { players: [...room.players, userId] }, tx);
-        });
+        const joinResult = await this.roomService.join(roomId);
+        if (joinResult instanceof Error) {
+            return renderError(joinResult);
+        }
 
         return renderRedirect(`/room/${roomId}`);
     }
 
     @Put(':roomId/leave')
     async leave(@Param('roomId') roomId: string) {
-        const userId = getClsUserId();
+        const leaveResult = await this.roomService.leave(roomId);
+        if (leaveResult instanceof Error) {
+            return renderError(leaveResult);
+        }
 
-        return this.prisma.$transaction(async (tx) => {
-            const activeRoom = await this.roomService.getRoomForUser(userId, tx);
-
-            if ((activeRoom && activeRoom.id !== roomId) || !activeRoom) {
-                return renderNotification('error', 'You is not a member');
-            }
-
-            const updatedPlayersList = activeRoom.players.filter((player) => player != userId);
-            const playersListIsEmpty = updatedPlayersList.length === 0;
-
-            if (playersListIsEmpty) {
-                await this.roomService.deleteRoom(roomId, tx);
-                return renderRedirect(`/`);
-            }
-
-            await this.roomService.updateRoom(roomId, { players: { set: updatedPlayersList } }, tx);
-        });
+        if (leaveResult === null) {
+            return renderRedirect(`/`);
+        }
     }
 
     @Patch(':roomId/rename')
     async rename(@Param('roomId') roomId: string, @Body('value') value: string) {
         if (!value.trim()) {
-            return renderNotification('error', 'Value is empty');
+            return renderError(new Error('Value is empty'));
         }
 
-        return this.prisma.$transaction(async (tx) => {
-            const room = await this.roomService.getRoomById(roomId, tx);
-            if (!room) {
-                return renderNotification('error', 'Room is not found');
-            }
-
-            if (!room.isCreatedByMe) {
-                return renderNotification('error', 'Permission denied');
-            }
-
-            if (value.toLowerCase() === room.name.toLowerCase()) {
-                return;
-            }
-
-            try {
-                await this.roomService.updateRoom(roomId, { name: value.toLowerCase() }, tx);
-            } catch (error: unknown) {
-                if (isPrismaError(error, PrismaErrorEnum.P2002)) {
-                    return renderNotification('error', 'This name already taken');
-                }
-
-                throw error;
-            }
-        });
+        const renameResult = await this.roomService.rename(roomId, value);
+        if (renameResult instanceof Error) {
+            return renderError(renameResult);
+        }
     }
 }
