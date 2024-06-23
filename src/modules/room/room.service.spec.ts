@@ -94,7 +94,8 @@ describe(`The ${RoomService.name} service`, () => {
     describe('leave', () => {
         it(`leave: should leave a room`, async () =>
             actAsClsUser(generateUserId(), async () => {
-                const { roomService, module } = await createContext();
+                const { roomService, module, redisService } = await createContext();
+                mockReset(redisService);
 
                 const roomToLeave = await roomService.tryCreate();
                 assert.ok(isRoomDto(roomToLeave));
@@ -104,6 +105,7 @@ describe(`The ${RoomService.name} service`, () => {
 
                 const leaveResult = await roomService.leave(roomToLeave.id);
                 assert.ok(isNil(leaveResult));
+                expect(redisService.publish).toHaveBeenCalledWith(roomToLeave.id, ROOM_UPDATED);
 
                 const roomAfterLeave = await roomService.getById(roomToLeave.id);
                 assert.ok(roomAfterLeave instanceof NotFoundException);
@@ -138,7 +140,8 @@ describe(`The ${RoomService.name} service`, () => {
     describe('rename', () => {
         it(`should rename a room`, async () =>
             actAsClsUser(generateUserId(), async () => {
-                const { roomService, module } = await createContext();
+                const { roomService, module, redisService } = await createContext();
+                mockReset(redisService);
 
                 const roomToRename = await roomService.tryCreate();
                 assert.ok(isRoomDto(roomToRename));
@@ -147,6 +150,7 @@ describe(`The ${RoomService.name} service`, () => {
                 const renameResult = await roomService.rename(roomToRename.id, modifiedName);
                 assert.ok(isRoomDto(renameResult));
                 assert.strictEqual(renameResult.name, modifiedName);
+                expect(redisService.publish).toHaveBeenCalledWith(roomToRename.id, ROOM_UPDATED);
 
                 await module.close();
             }));
