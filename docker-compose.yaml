@@ -27,9 +27,9 @@ services:
   redis-message-bus:
     hostname: test_task_best_way-redis
     image: "redis:5.0-alpine"
-    restart: always
     ports:
       - "3012:6379"
+    restart: always
     networks:
       - jumpserver
       - default
