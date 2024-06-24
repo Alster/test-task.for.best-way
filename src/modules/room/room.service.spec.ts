@@ -3,18 +3,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RoomModule } from './room.module';
 import PrismaService from '../../services/prisma.service';
 import RedisService from '../../services/redis.service';
-import { actAsClsUser } from '../../utils/act-as-cls-user';
+import { runClsWithUser } from '../../utils/cls/run-cls-with-user';
 import { mock, MockProxy, mockReset } from 'jest-mock-extended';
-import { generateUserId } from '../user/src/generate-user.id';
+import { generateUserId } from '../user/utils/generate-user-id';
 import * as assert from 'node:assert';
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { AlreadyJoinedError } from './src/already-joined.error';
-import { isRoomDto } from './src/dto/is-room-dto';
+import { AlreadyJoinedError } from './utils/already-joined.error';
+import { isRoomDto } from './dto/is.room.dto';
 import { isNil } from '@nestjs/common/utils/shared.utils';
-import { generateRoomName } from './src/generate-room-name';
+import { generateRoomName } from './utils/generate-room-name';
 
-import { TRoomId } from '../../constants/base-types';
-import { ROOM_UPDATED } from './src/constants';
+import { TRoomId } from './constants/base-types';
+import { ROOM_UPDATED } from './constants/constants';
 
 type TContext = {
     module: TestingModule;
@@ -42,7 +42,7 @@ async function createContext(): Promise<TContext> {
 describe(`The ${RoomService.name} service`, () => {
     describe('create', () => {
         it(`should create a room`, async () =>
-            actAsClsUser(generateUserId(), async () => {
+            runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
                 const createResult = await roomService.tryCreate();
@@ -52,7 +52,7 @@ describe(`The ${RoomService.name} service`, () => {
             }));
 
         it(`cannot create: already joined`, async () =>
-            actAsClsUser(generateUserId(), async () => {
+            runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
                 const firstResult = await roomService.tryCreate();
@@ -69,10 +69,12 @@ describe(`The ${RoomService.name} service`, () => {
             const { roomService, module, redisService } = await createContext();
             mockReset(redisService);
 
-            const roomToJoin = await actAsClsUser(generateUserId(), () => roomService.tryCreate());
+            const roomToJoin = await runClsWithUser(generateUserId(), () =>
+                roomService.tryCreate(),
+            );
             assert.ok(isRoomDto(roomToJoin));
 
-            const joinResult = await actAsClsUser(generateUserId(), () =>
+            const joinResult = await runClsWithUser(generateUserId(), () =>
                 roomService.join(roomToJoin.id),
             );
             assert.ok(isRoomDto(joinResult));
@@ -82,7 +84,7 @@ describe(`The ${RoomService.name} service`, () => {
         });
 
         it(`cannot join: room not found`, async () =>
-            actAsClsUser(generateUserId(), async () => {
+            runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
                 const joinResult = await roomService.join('not-found-room-id' as TRoomId);
@@ -93,7 +95,7 @@ describe(`The ${RoomService.name} service`, () => {
     });
     describe('leave', () => {
         it(`leave: should leave a room`, async () =>
-            actAsClsUser(generateUserId(), async () => {
+            runClsWithUser(generateUserId(), async () => {
                 const { roomService, module, redisService } = await createContext();
                 mockReset(redisService);
 
@@ -116,10 +118,12 @@ describe(`The ${RoomService.name} service`, () => {
         it(`cannot leave: you is not a member`, async () => {
             const { roomService, module } = await createContext();
 
-            const roomToLeave = await actAsClsUser(generateUserId(), () => roomService.tryCreate());
+            const roomToLeave = await runClsWithUser(generateUserId(), () =>
+                roomService.tryCreate(),
+            );
             assert.ok(isRoomDto(roomToLeave));
 
-            const leaveResult = await actAsClsUser(generateUserId(), () =>
+            const leaveResult = await runClsWithUser(generateUserId(), () =>
                 roomService.leave(roomToLeave.id),
             );
             assert.ok(leaveResult instanceof Error);
@@ -128,7 +132,7 @@ describe(`The ${RoomService.name} service`, () => {
         });
 
         it(`cannot leave: room not found`, async () =>
-            actAsClsUser(generateUserId(), async () => {
+            runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
                 const leaveResult = await roomService.leave('not-found-room-id' as TRoomId);
@@ -139,7 +143,7 @@ describe(`The ${RoomService.name} service`, () => {
     });
     describe('rename', () => {
         it(`should rename a room`, async () =>
-            actAsClsUser(generateUserId(), async () => {
+            runClsWithUser(generateUserId(), async () => {
                 const { roomService, module, redisService } = await createContext();
                 mockReset(redisService);
 
@@ -157,12 +161,12 @@ describe(`The ${RoomService.name} service`, () => {
         it(`cannot rename: permission denied`, async () => {
             const { roomService, module } = await createContext();
 
-            const roomToRename = await actAsClsUser(generateUserId(), () =>
+            const roomToRename = await runClsWithUser(generateUserId(), () =>
                 roomService.tryCreate(),
             );
             assert.ok(isRoomDto(roomToRename));
 
-            const renameResult = await actAsClsUser(generateUserId(), () =>
+            const renameResult = await runClsWithUser(generateUserId(), () =>
                 roomService.rename(roomToRename.id, generateRoomName()),
             );
             assert.ok(renameResult instanceof ForbiddenException);
@@ -172,12 +176,12 @@ describe(`The ${RoomService.name} service`, () => {
         it(`cannot rename: already taken`, async () => {
             const { roomService, module } = await createContext();
 
-            const roomWithTakenName = await actAsClsUser(generateUserId(), () =>
+            const roomWithTakenName = await runClsWithUser(generateUserId(), () =>
                 roomService.tryCreate(),
             );
             assert.ok(isRoomDto(roomWithTakenName));
 
-            await actAsClsUser(generateUserId(), async () => {
+            await runClsWithUser(generateUserId(), async () => {
                 const roomToRename = await roomService.tryCreate();
                 assert.ok(isRoomDto(roomToRename));
 

@@ -2,15 +2,15 @@ import { Body, Controller, Get, Param, Patch, Post, Put, Req, Res, Sse } from '@
 import RoomService from './room.service';
 import { concatMap, Observable, Subject, timer } from 'rxjs';
 import HbsTemplatesService from '../hbsTemplate/hbs.templates.service';
-import { TemplatesEnum } from '../hbsTemplate/src/templates.enum';
-import { getClsUserId } from '../../utils/get-cls.user-id';
+import { TemplatesEnum } from '../hbsTemplate/constants/templates.enum';
+import { getClsUserId } from '../../utils/cls/get-cls-user-id';
 import { renderError } from '../../utils/templates/render-error';
 import { renderRedirect } from '../../utils/templates/render-redirect';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import RedisService from '../../services/redis.service';
-import { actAsClsUser } from '../../utils/act-as-cls-user';
+import { runClsWithUser } from '../../utils/cls/run-cls-with-user';
 
-import { TRoomId, TRoomName } from '../../constants/base-types';
+import { TRoomId, TRoomName } from './constants/base-types';
 
 @Controller('room')
 export default class RoomController {
@@ -54,7 +54,7 @@ export default class RoomController {
         const userId = getClsUserId();
 
         const pushUpdate = async () => {
-            return actAsClsUser(userId, async () => {
+            return runClsWithUser(userId, async () => {
                 const maybeRoom = await this.roomService.getById(roomId);
                 const message = this.hbsTemplatesService.render(
                     TemplatesEnum.room,

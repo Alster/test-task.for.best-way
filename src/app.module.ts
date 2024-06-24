@@ -3,9 +3,9 @@ import { AppController } from './controllers/app.controller';
 import { RoomModule } from './modules/room/room.module';
 import { UserModule } from './modules/user/user.module';
 import { ClsModule } from 'nestjs-cls';
-import { USER_ID_COOKIE_NAME } from './constants/cookie.constants';
+import { USER_ID_COOKIE_NAME } from './utils/cookie/constants';
 import { HbsTemplatesModule } from './modules/hbsTemplate/hbs.templates.module';
-import { parseCookieString } from './utils/parse-cookie-string';
+import { parseCookieString } from './utils/cookie/parse-cookie-string';
 
 @Module({
     imports: [

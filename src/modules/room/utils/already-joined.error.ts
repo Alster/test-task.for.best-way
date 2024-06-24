@@ -1,4 +1,4 @@
-import { RoomDto } from './dto/room.dto';
+import { RoomDto } from '../dto/room.dto';
 
 export class AlreadyJoinedError extends Error {
     name = 'AlreadyJoinedError';

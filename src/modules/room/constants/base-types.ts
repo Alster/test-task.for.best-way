@@ -1,6 +1,3 @@
-export type TUserId = Lowercase<string> & { _opaque: typeof TUserId };
-declare const TUserId: unique symbol;
-
 export type TRoomId = Lowercase<string> & { _opaque: typeof TRoomId };
 declare const TRoomId: unique symbol;
 

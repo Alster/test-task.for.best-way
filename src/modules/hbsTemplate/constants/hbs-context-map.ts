@@ -1,5 +1,5 @@
 import { TemplatesEnum } from './templates.enum';
-import { RoomDto } from '../../room/src/dto/room.dto';
+import { RoomDto } from '../../room/dto/room.dto';
 
 type TContextTypeMap = {
     [TemplatesEnum.page_index]: { userId: string };

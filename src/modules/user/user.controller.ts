@@ -2,9 +2,9 @@ import { Body, Controller, Patch, Res } from '@nestjs/common';
 import UserService from './user.service';
 import { renderError } from '../../utils/templates/render-error';
 import { FastifyReply } from 'fastify';
-import { setUserIdCookie } from '../../utils/set-user-id-cookie';
+import { setCookieUserId } from '../../utils/cookie/set-cookie-user-id';
 import { renderRedirect } from '../../utils/templates/render-redirect';
-import { generateUserId } from './src/generate-user.id';
+import { generateUserId } from './utils/generate-user-id';
 
 @Controller('user')
 export default class UserController {
@@ -19,12 +19,12 @@ export default class UserController {
             return renderError(new Error('Value is empty'));
         }
 
-        setUserIdCookie(response, value);
+        setCookieUserId(response, value);
     }
 
     @Patch('random')
     async userRandom(@Res({ passthrough: true }) response: FastifyReply) {
-        setUserIdCookie(response, generateUserId());
+        setCookieUserId(response, generateUserId());
 
         return renderRedirect('/', true);
     }

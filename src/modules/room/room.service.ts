@@ -7,16 +7,17 @@ import {
 } from '@nestjs/common';
 import PrismaService, { PrismaTX } from '../../services/prisma.service';
 import { Prisma } from '@prisma/client';
-import { RoomDto } from './src/dto/room.dto';
-import { mapRoomToDto } from './src/dto/room.dto-mapper';
+import { RoomDto } from './dto/room.dto';
+import { mapRoomToDto } from './dto/room.dto.mapper';
 import { isPrismaError, PrismaErrorEnum } from '../../utils/prisma-errors';
 import RedisService from '../../services/redis.service';
-import { AlreadyJoinedError } from './src/already-joined.error';
-import { getClsUserId } from '../../utils/get-cls.user-id';
-import { generateRoomName } from './src/generate-room-name';
-import { TRoomId, TRoomName, TUserId } from '../../constants/base-types';
-import { ROOM_UPDATED } from './src/constants';
-import { isRoomDto } from './src/dto/is-room-dto';
+import { AlreadyJoinedError } from './utils/already-joined.error';
+import { getClsUserId } from '../../utils/cls/get-cls-user-id';
+import { generateRoomName } from './utils/generate-room-name';
+import { TRoomId, TRoomName } from './constants/base-types';
+import { ROOM_UPDATED } from './constants/constants';
+import { isRoomDto } from './dto/is.room.dto';
+import { TUserId } from '../user/constants/base-types';
 
 @Injectable()
 export default class RoomService {

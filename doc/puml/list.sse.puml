@@ -1,0 +1,18 @@
+@startuml
+!include ./includes/style.iuml
+
+hide footbox
+actor User
+participant App
+
+autonumber 1
+User -> App: SSE Request
+App -> User: Receive a list of rooms
+App -> App: Wait 1s
+App -> User: Receive a new list
+App -> App: Wait 1s
+App -> User: Receive a new list
+App -> App: Wait 1s, and so on...
+
+
+@enduml

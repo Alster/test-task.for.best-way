@@ -1,13 +1,14 @@
 import { Controller, Get, Res } from '@nestjs/common';
-import { TemplatesEnum } from '../modules/hbsTemplate/src/templates.enum';
+import { TemplatesEnum } from '../modules/hbsTemplate/constants/templates.enum';
 import UserService from '../modules/user/user.service';
-import { USER_ID_COOKIE_NAME } from '../constants/cookie.constants';
-import { Cookies } from '../decorators/cookies.decorator';
+import { USER_ID_COOKIE_NAME } from '../utils/cookie/constants';
+import { Cookies } from '../utils/cookie/cookies.decorator';
 import HbsTemplatesService from '../modules/hbsTemplate/hbs.templates.service';
 import { FastifyReply } from 'fastify';
-import { setUserIdCookie } from '../utils/set-user-id-cookie';
-import { generateUserId } from '../modules/user/src/generate-user.id';
-import { TUserId } from '../constants/base-types';
+import { setCookieUserId } from '../utils/cookie/set-cookie-user-id';
+import { generateUserId } from '../modules/user/utils/generate-user-id';
+
+import { TUserId } from '../modules/user/constants/base-types';
 
 @Controller()
 export class AppController {
@@ -23,7 +24,7 @@ export class AppController {
     ) {
         if (!userId) {
             userId = generateUserId();
-            setUserIdCookie(response, userId);
+            setCookieUserId(response, userId);
         }
 
         response.header('Content-Type', 'text/html');

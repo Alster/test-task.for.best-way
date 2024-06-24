@@ -1,0 +1,26 @@
+@startuml
+!include ./includes/style.iuml
+
+hide footbox
+actor UserA
+participant App1
+control Redis
+participant App2
+actor UserB
+actor UserC
+actor UserD
+
+autonumber 1
+UserA -> App1: SSE Request
+App1 -> Redis: Subscribe
+UserB -> App2: Act to join room
+App2 -> Redis: Publish
+Redis -> App1: Message
+App1 -> UserA: Receive update
+UserC -> App2: Act to rename room
+App2 -> Redis: Publish
+Redis -> App1: Message
+App1 -> UserA: Receive update
+UserD -> App2: Act to leave room, and etc...
+
+@enduml

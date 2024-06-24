@@ -1,6 +1,6 @@
 import Handlebars from 'handlebars';
 
-export const registerHbsHelpers = () => {
+export function registerHbsHelpers() {
     Handlebars.registerHelper('randomHash', function () {
         return Math.random().toString(36).slice(2);
     });
@@ -8,4 +8,4 @@ export const registerHbsHelpers = () => {
     Handlebars.registerHelper('increment', function (value: string) {
         return Number.parseInt(value) + 1;
     });
-};
+}

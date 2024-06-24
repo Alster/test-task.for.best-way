@@ -19,7 +19,8 @@ async function bootstrap() {
         prefix: '/assets/',
     });
 
-    await app.listen(3000, '0.0.0.0');
+    const port = Number.parseInt(process.env.APP_PORT ?? '');
+    await app.listen(port, '0.0.0.0');
     logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 

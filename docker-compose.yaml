@@ -8,11 +8,16 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    restart: always
     env_file:
       - .env
+    environment:
+      - APP_PORT=3011
     ports:
-      - "3000:3000"
-    command: "pnpm run start:prod"
+      - "3011:3011"
+    networks:
+      - jumpserver
+      - default
     depends_on:
       - redis-message-bus
       - mongodb-single-replica
@@ -22,24 +27,35 @@ services:
   redis-message-bus:
     hostname: test_task_best_way-redis
     image: "redis:5.0-alpine"
+    restart: always
     ports:
-      - "6379:6379"
+      - "3012:6379"
+    networks:
+      - jumpserver
+      - default
 
   mongodb-single-replica:
     image: mongo:5.0.4
     hostname: test_task_best_way-mongodb
-    ports:
-      - "27037:27037"
     restart: always
     environment:
       - MONGODB_DATABASE="best-way"
+    ports:
+      - "3013:3013"
     volumes:
       - ./docker/volume/mongodb_local:/data/db
-    command: [ "--replSet", "rs0", "--bind_ip_all", "--port", "27037" ]
+    command: [ "--replSet", "rs0", "--bind_ip_all", "--port", "3013" ]
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'test_task_best_way-mongodb:27037'}]}) }" | mongosh --port 27037 --quiet
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'test_task_best_way-mongodb:3013'}]}) }" | mongosh --port 3013 --quiet
       interval: 5s
       timeout: 30s
       start_period: 0s
       retries: 30
+    networks:
+      - jumpserver
+      - default
   # endregion
+
+networks:
+  jumpserver:
+    external: true

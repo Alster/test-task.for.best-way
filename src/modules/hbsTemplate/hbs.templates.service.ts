@@ -1,12 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { TemplatesEnum } from './src/templates.enum';
-import { loadHbsTemplate } from './src/load-hbs-template';
-import { THbsContextMap as THbsContextMap } from './src/hbs-context-map';
+import { TemplatesEnum } from './constants/templates.enum';
+import { loadHbsTemplate } from './utils/load-hbs-template';
+import { THbsContextMap as THbsContextMap } from './constants/hbs-context-map';
 import objectFromEntries from '../../utils/object.from-entries';
 import { buildPathFromRoot } from '../../utils/build-path-from-root';
-import { PARTIALS_FOLDER_NAME, TEMPLATES_FOLDER_NAME } from './src/hbs.constants';
-import { loadHbsPartials } from './src/load-hbs-partials';
-import { registerHbsHelpers } from './src/register-hbs-helpers';
+import { PARTIALS_FOLDER_NAME, TEMPLATES_FOLDER_NAME } from './constants/constants';
+import { loadHbsPartials } from './utils/load-hbs-partials';
+import { registerHbsHelpers } from './utils/register-hbs-helpers';
 
 @Injectable()
 export default class HbsTemplatesService implements OnModuleInit {

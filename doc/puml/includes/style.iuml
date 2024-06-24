@@ -29,8 +29,6 @@ skinparam note {
     BorderColor white
     FontColor white
 }
-
-
 skinparam package {
     BorderColor #89c5c8
     FontColor #58a2e0
