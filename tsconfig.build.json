@@ -1,17 +1,14 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": [
-    "node_modules",
-    "test",
-    "dist",
-    "**/*spec.ts"
-  ],
-  "compilerOptions": {
-    "sourceMap": true,
-    "noEmit": false,
-    "incremental": true,
-    "tsBuildInfoFile": "./dist/tsbuildinfo.json",
-    "outDir": "dist",
-    "rootDir": "./"
-  }
+    "extends": "./tsconfig.json",
+    "exclude": ["node_modules", "test", "dist", "**/*spec.ts"],
+    "compilerOptions": {
+        "declaration": true,
+        "incremental": true,
+        "noEmit": false,
+        "outDir": "dist",
+        "removeComments": false,
+        "rootDir": "./",
+        "sourceMap": true,
+        "tsBuildInfoFile": "./dist/tsbuildinfo.json"
+    }
 }
