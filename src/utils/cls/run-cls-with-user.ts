@@ -1,7 +1,7 @@
 import { ClsServiceManager } from 'nestjs-cls';
-import { USER_ID_COOKIE_NAME } from '../cookie/constants';
 
 import { TUserId } from '../../modules/user/constants/base-types';
+import { USER_ID_COOKIE_NAME } from '../cookie/constants';
 
 export async function runClsWithUser<T>(
     userId: TUserId,

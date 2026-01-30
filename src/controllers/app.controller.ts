@@ -1,14 +1,14 @@
 import { Controller, Get, Res } from '@nestjs/common';
+import { FastifyReply } from 'fastify';
+
 import { TemplatesEnum } from '../modules/hbsTemplate/constants/templates.enum';
+import HbsTemplatesService from '../modules/hbsTemplate/hbs.templates.service';
+import { TUserId } from '../modules/user/constants/base-types';
 import UserService from '../modules/user/user.service';
+import { generateUserId } from '../modules/user/utils/generate-user-id';
 import { USER_ID_COOKIE_NAME } from '../utils/cookie/constants';
 import { Cookies } from '../utils/cookie/cookies.decorator';
-import HbsTemplatesService from '../modules/hbsTemplate/hbs.templates.service';
-import { FastifyReply } from 'fastify';
 import { setCookieUserId } from '../utils/cookie/set-cookie-user-id';
-import { generateUserId } from '../modules/user/utils/generate-user-id';
-
-import { TUserId } from '../modules/user/constants/base-types';
 
 @Controller()
 export class AppController {

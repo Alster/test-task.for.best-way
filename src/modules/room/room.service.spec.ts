@@ -1,20 +1,21 @@
-import RoomService from './room.service';
+import * as assert from 'node:assert';
+
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Test, TestingModule } from '@nestjs/testing';
-import { RoomModule } from './room.module';
+import { MockProxy, mock, mockReset } from 'jest-mock-extended';
+
 import PrismaService from '../../services/prisma.service';
 import RedisService from '../../services/redis.service';
 import { runClsWithUser } from '../../utils/cls/run-cls-with-user';
-import { mock, MockProxy, mockReset } from 'jest-mock-extended';
 import { generateUserId } from '../user/utils/generate-user-id';
-import * as assert from 'node:assert';
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { AlreadyJoinedError } from './utils/already-joined.error';
-import { isRoomDto } from './dto/is.room.dto';
-import { isNil } from '@nestjs/common/utils/shared.utils';
-import { generateRoomName } from './utils/generate-room-name';
-
 import { TRoomId } from './constants/base-types';
 import { ROOM_UPDATED } from './constants/constants';
+import { isRoomDto } from './dto/is.room.dto';
+import { RoomModule } from './room.module';
+import RoomService from './room.service';
+import { AlreadyJoinedError } from './utils/already-joined.error';
+import { generateRoomName } from './utils/generate-room-name';
 
 type TContext = {
     module: TestingModule;
@@ -41,7 +42,7 @@ async function createContext(): Promise<TContext> {
 
 describe(`The ${RoomService.name} service`, () => {
     describe('create', () => {
-        it(`should create a room`, async () =>
+        it('should create a room', async () =>
             runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
@@ -51,7 +52,7 @@ describe(`The ${RoomService.name} service`, () => {
                 await module.close();
             }));
 
-        it(`cannot create: already joined`, async () =>
+        it('cannot create: already joined', async () =>
             runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
@@ -65,7 +66,7 @@ describe(`The ${RoomService.name} service`, () => {
             }));
     });
     describe('join', () => {
-        it(`should join a room`, async () => {
+        it('should join a room', async () => {
             const { roomService, module, redisService } = await createContext();
             mockReset(redisService);
 
@@ -83,7 +84,7 @@ describe(`The ${RoomService.name} service`, () => {
             await module.close();
         });
 
-        it(`cannot join: room not found`, async () =>
+        it('cannot join: room not found', async () =>
             runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
@@ -94,7 +95,7 @@ describe(`The ${RoomService.name} service`, () => {
             }));
     });
     describe('leave', () => {
-        it(`leave: should leave a room`, async () =>
+        it('leave: should leave a room', async () =>
             runClsWithUser(generateUserId(), async () => {
                 const { roomService, module, redisService } = await createContext();
                 mockReset(redisService);
@@ -115,7 +116,7 @@ describe(`The ${RoomService.name} service`, () => {
                 await module.close();
             }));
 
-        it(`cannot leave: you is not a member`, async () => {
+        it('cannot leave: you is not a member', async () => {
             const { roomService, module } = await createContext();
 
             const roomToLeave = await runClsWithUser(generateUserId(), () =>
@@ -131,7 +132,7 @@ describe(`The ${RoomService.name} service`, () => {
             await module.close();
         });
 
-        it(`cannot leave: room not found`, async () =>
+        it('cannot leave: room not found', async () =>
             runClsWithUser(generateUserId(), async () => {
                 const { roomService, module } = await createContext();
 
@@ -142,7 +143,7 @@ describe(`The ${RoomService.name} service`, () => {
             }));
     });
     describe('rename', () => {
-        it(`should rename a room`, async () =>
+        it('should rename a room', async () =>
             runClsWithUser(generateUserId(), async () => {
                 const { roomService, module, redisService } = await createContext();
                 mockReset(redisService);
@@ -158,7 +159,7 @@ describe(`The ${RoomService.name} service`, () => {
 
                 await module.close();
             }));
-        it(`cannot rename: permission denied`, async () => {
+        it('cannot rename: permission denied', async () => {
             const { roomService, module } = await createContext();
 
             const roomToRename = await runClsWithUser(generateUserId(), () =>
@@ -173,7 +174,7 @@ describe(`The ${RoomService.name} service`, () => {
 
             await module.close();
         });
-        it(`cannot rename: already taken`, async () => {
+        it('cannot rename: already taken', async () => {
             const { roomService, module } = await createContext();
 
             const roomWithTakenName = await runClsWithUser(generateUserId(), () =>

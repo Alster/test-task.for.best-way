@@ -8,7 +8,7 @@ const objectFromEntries = <
     OValue,
     Entries extends readonly [OKey, OValue],
 >(
-    entries: ReadonlyArray<Entries>,
+    entries: readonly Entries[],
 ) =>
     Object.fromEntries(entries) as {
         [K in (typeof entries)[number][0]]: (typeof entries)[number] extends readonly [K, infer V]

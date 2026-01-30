@@ -1,7 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import Handlebars from 'handlebars';
+
 import { Logger } from '@nestjs/common';
+import Handlebars from 'handlebars';
 
 const logger = new Logger('HBSPartialTemplateLoader');
 

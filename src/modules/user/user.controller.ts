@@ -1,9 +1,10 @@
 import { Body, Controller, Patch, Res } from '@nestjs/common';
-import UserService from './user.service';
-import { renderError } from '../../utils/templates/render-error';
 import { FastifyReply } from 'fastify';
+
 import { setCookieUserId } from '../../utils/cookie/set-cookie-user-id';
+import { renderError } from '../../utils/templates/render-error';
 import { renderRedirect } from '../../utils/templates/render-redirect';
+import UserService from './user.service';
 import { generateUserId } from './utils/generate-user-id';
 
 @Controller('user')

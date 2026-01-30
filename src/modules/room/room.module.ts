@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
+
 import PrismaService from '../../services/prisma.service';
-import RoomService from './room.service';
-import RoomController from './room.controller';
-import { HbsTemplatesModule } from '../hbsTemplate/hbs.templates.module';
 import RedisService from '../../services/redis.service';
+import { HbsTemplatesModule } from '../hbsTemplate/hbs.templates.module';
+import RoomController from './room.controller';
+import RoomService from './room.service';
 
 @Module({
     imports: [HbsTemplatesModule],

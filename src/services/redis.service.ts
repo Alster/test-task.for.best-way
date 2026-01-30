@@ -1,6 +1,7 @@
+import * as process from 'node:process';
+
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { createClient } from '@redis/client';
-import * as process from 'node:process';
 
 type TCallback = (message: string) => void;
 

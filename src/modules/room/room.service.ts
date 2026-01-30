@@ -5,19 +5,20 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
-import PrismaService, { PrismaTX } from '../../services/prisma.service';
 import { Prisma } from '@prisma/client';
-import { RoomDto } from './dto/room.dto';
-import { mapRoomToDto } from './dto/room.dto.mapper';
-import { isPrismaError, PrismaErrorEnum } from '../../utils/prisma-errors';
+
+import PrismaService, { PrismaTX } from '../../services/prisma.service';
 import RedisService from '../../services/redis.service';
-import { AlreadyJoinedError } from './utils/already-joined.error';
 import { getClsUserId } from '../../utils/cls/get-cls-user-id';
-import { generateRoomName } from './utils/generate-room-name';
+import { isPrismaError, PrismaErrorEnum } from '../../utils/prisma-errors';
+import { TUserId } from '../user/constants/base-types';
 import { TRoomId, TRoomName } from './constants/base-types';
 import { ROOM_UPDATED } from './constants/constants';
 import { isRoomDto } from './dto/is.room.dto';
-import { TUserId } from '../user/constants/base-types';
+import { RoomDto } from './dto/room.dto';
+import { mapRoomToDto } from './dto/room.dto.mapper';
+import { AlreadyJoinedError } from './utils/already-joined.error';
+import { generateRoomName } from './utils/generate-room-name';
 
 @Injectable()
 export default class RoomService {
@@ -31,10 +32,10 @@ export default class RoomService {
     async getById(id: TRoomId, tx: PrismaTX = this.prisma): Promise<RoomDto | Error> {
         try {
             const maybeRoom = await tx.room.findUnique({ where: { id } });
-            return maybeRoom ? mapRoomToDto(maybeRoom) : new NotFoundException(`Room not found`);
+            return maybeRoom ? mapRoomToDto(maybeRoom) : new NotFoundException('Room not found');
         } catch (error: unknown) {
             if (isPrismaError(error, PrismaErrorEnum.P2023)) {
-                return new NotFoundException(`Invalid room id`);
+                return new NotFoundException('Invalid room id');
             }
 
             throw error;
@@ -43,7 +44,7 @@ export default class RoomService {
 
     async getByName(name: TRoomName, tx: PrismaTX = this.prisma): Promise<RoomDto | Error> {
         const maybeRoom = await tx.room.findUnique({ where: { name } });
-        return maybeRoom ? mapRoomToDto(maybeRoom) : new NotFoundException(`Room not found`);
+        return maybeRoom ? mapRoomToDto(maybeRoom) : new NotFoundException('Room not found');
     }
 
     async getList(): Promise<RoomDto[]> {
@@ -100,9 +101,8 @@ export default class RoomService {
             if (playersListIsEmpty) {
                 await this.delete(roomId, tx);
                 return null;
-            } else {
-                return await this.update(roomId, { players: { set: updatedPlayersList } }, tx);
             }
+            return await this.update(roomId, { players: { set: updatedPlayersList } }, tx);
         });
     }
 

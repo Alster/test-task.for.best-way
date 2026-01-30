@@ -1,0 +1,128 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": {
+                    "level": "on",
+                    "options": {
+                        "groups": [
+                            [":BUN:", ":NODE:"],
+                            ":BLANK_LINE:",
+
+                            ":PACKAGE:",
+                            ":BLANK_LINE:",
+
+                            [".", ".."]
+                        ]
+                    }
+                },
+                "useSortedKeys": "off"
+            }
+        },
+        "enabled": true
+    },
+    "files": {
+        "includes": ["**", "!**/node_modules/**", "!**/dist/**", "!**/prisma/**"]
+    },
+    "formatter": {
+        "attributePosition": "auto",
+        "bracketSpacing": true,
+        "enabled": true,
+        "formatWithErrors": false,
+        "lineWidth": 100,
+        "useEditorconfig": true
+    },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "always",
+            "bracketSameLine": false,
+            "bracketSpacing": true,
+            "quoteProperties": "asNeeded",
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingCommas": "all"
+        },
+        "parser": {
+            "unsafeParameterDecoratorsEnabled": true
+        }
+    },
+    "json": {
+        "formatter": {
+            "trailingCommas": "none"
+        }
+    },
+    "linter": {
+        "domains": {
+            "next": "none",
+            "project": "all",
+            "react": "none",
+            "solid": "none",
+            "test": "all"
+        },
+        "enabled": true,
+        "rules": {
+            "a11y": "off",
+            "complexity": {
+                "noExcessiveCognitiveComplexity": "off",
+                "noUselessLoneBlockStatements": "off",
+                "useOptionalChain": "info"
+            },
+            "correctness": {
+                "noNodejsModules": "off",
+                "noUndeclaredDependencies": "off",
+                "noUnusedImports": {
+                    "fix": "safe",
+                    "level": "warn"
+                },
+                "noVoidTypeReturn": "off",
+                "useImportExtensions": "off"
+            },
+            "nursery": {
+                "noSecrets": "off",
+                "useExplicitType": "warn"
+            },
+            "performance": {
+                "noBarrelFile": "warn",
+                "noNamespaceImport": "off",
+                "noReExportAll": "off"
+            },
+            "recommended": true,
+            "security": "on",
+            "style": {
+                "noEnum": "off",
+                "noInferrableTypes": "error",
+                "noNonNullAssertion": "warn",
+                "noParameterAssign": "info",
+                "noParameterProperties": "off",
+                "noUnusedTemplateLiteral": "error",
+                "noUselessElse": "info",
+                "useAsConstAssertion": "error",
+                "useBlockStatements": "off",
+                "useConsistentArrayType": {
+                    "fix": "safe",
+                    "level": "error"
+                },
+                "useDefaultParameterLast": "error",
+                "useEnumInitializers": "warn",
+                "useExplicitLengthCheck": "off",
+                "useImportType": "off",
+                "useNamingConvention": "off",
+                "useNumberNamespace": "error",
+                "useSelfClosingElements": "error",
+                "useSingleVarDeclarator": "info",
+                "useTemplate": "info"
+            },
+            "suspicious": {
+                "noAssignInExpressions": "warn",
+                "noConfusingVoidType": "off",
+                "noConsole": "off",
+                "noConstEnum": "off",
+                "noDoubleEquals": "warn",
+                "noEmptyInterface": "off",
+                "noMisplacedAssertion": "off"
+            }
+        }
+    },
+    "root": true
+}

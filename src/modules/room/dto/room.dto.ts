@@ -1,5 +1,5 @@
-import { TRoomId, TRoomName } from '../constants/base-types';
 import { TUserId } from '../../user/constants/base-types';
+import { TRoomId, TRoomName } from '../constants/base-types';
 
 export class RoomDto {
     id: TRoomId;

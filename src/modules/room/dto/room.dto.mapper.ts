@@ -1,8 +1,9 @@
-import { RoomDto } from './room.dto';
 import { Room } from '@prisma/client';
+
 import { getClsUserId } from '../../../utils/cls/get-cls-user-id';
-import { TRoomId, TRoomName } from '../constants/base-types';
 import { TUserId } from '../../user/constants/base-types';
+import { TRoomId, TRoomName } from '../constants/base-types';
+import { RoomDto } from './room.dto';
 
 export function mapRoomToDto(room: Room): RoomDto {
     return {

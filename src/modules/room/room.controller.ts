@@ -1,16 +1,16 @@
 import { Body, Controller, Get, Param, Patch, Post, Put, Req, Res, Sse } from '@nestjs/common';
-import RoomService from './room.service';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { concatMap, Observable, Subject, timer } from 'rxjs';
-import HbsTemplatesService from '../hbsTemplate/hbs.templates.service';
-import { TemplatesEnum } from '../hbsTemplate/constants/templates.enum';
+
+import RedisService from '../../services/redis.service';
 import { getClsUserId } from '../../utils/cls/get-cls-user-id';
+import { runClsWithUser } from '../../utils/cls/run-cls-with-user';
 import { renderError } from '../../utils/templates/render-error';
 import { renderRedirect } from '../../utils/templates/render-redirect';
-import { FastifyReply, FastifyRequest } from 'fastify';
-import RedisService from '../../services/redis.service';
-import { runClsWithUser } from '../../utils/cls/run-cls-with-user';
-
+import { TemplatesEnum } from '../hbsTemplate/constants/templates.enum';
+import HbsTemplatesService from '../hbsTemplate/hbs.templates.service';
 import { TRoomId, TRoomName } from './constants/base-types';
+import RoomService from './room.service';
 
 @Controller('room')
 export default class RoomController {
@@ -108,7 +108,7 @@ export default class RoomController {
             return renderError(leaveResult);
         }
         if (leaveResult === null) {
-            return renderRedirect(`/`);
+            return renderRedirect('/');
         }
     }
 

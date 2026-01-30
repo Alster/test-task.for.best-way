@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+
 import Handlebars from 'handlebars';
 
 export async function loadHbsTemplate(filePath: string): Promise<Handlebars.TemplateDelegate> {

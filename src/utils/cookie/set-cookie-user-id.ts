@@ -1,4 +1,5 @@
 import { FastifyReply } from 'fastify';
+
 import { USER_ID_COOKIE_NAME } from './constants';
 
 export function setCookieUserId(response: FastifyReply, userId: string) {
