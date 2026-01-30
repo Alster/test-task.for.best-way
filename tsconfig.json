@@ -9,6 +9,11 @@
         "noEmit": true,
         "noFallthroughCasesInSwitch": false,
         "noImplicitAny": false,
+        "plugins": [
+            {
+                "name": "@effect/language-service"
+            }
+        ],
         "skipLibCheck": true,
         "strict": true,
         "strictBindCallApply": false,
